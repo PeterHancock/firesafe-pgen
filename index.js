@@ -1,22 +1,49 @@
 const readline = require('readline')
 const pgen = require('./pgen')
-const accounts = require('./accounts.json')
+const accountsRaw = require('./accounts.json')
+const readSecret = require('./read-secret')
+const compareStringProperty = require('./compare-string-property')
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-})
+const args = process.argv.slice(2)
 
-console.error('secret?')
-rl.prompt()
+const argsSet = new Set(args)
 
-rl.on('line', (line) => {
-  Object.keys(accounts).forEach((accountKey) => {
-    const account = accounts[accountKey]
+if (argsSet.has('--help') || argsSet.has('-h')) {
+  console.log('firesafe-pgen [filter:rgx] [--help|-h] [--list|-l]')
+  exit()
+}
+
+const [filterMaybe] = args
+
+const filter = filterMaybe.startsWith('-') ? '.*' : filterMaybe
+
+console.error(`Filtering accounts to resources matching ${filter}`)
+
+const accounts = Object.keys(accountsRaw)
+  .map(accountKey => accountsRaw[accountKey])
+  .filter(account => account.resource.match(filter))
+  .sort(compareStringProperty(account => account.resource))
+
+if (argsSet.has('--list') || argsSet.has('-l')) {
+  accounts.forEach(account => {
     console.log(`
-    Resource ${account.resource}
-    Account ID ${account.id}
-    Password ${pgen(`${account.resource}${account.key}`, line.trim())}
-  `)})
-  process.exit(0)
+Resource ${account.resource}
+Account ID ${account.id}`)
+  })
+  exit()
+}
+
+readSecret('secret?', line => {
+  accounts.filter(account => account.resource.match(filter)).forEach(account => {
+    console.log(`
+  Resource ${account.resource}
+  Account ID ${account.id}
+  Password ${pgen(`${account.resource}${account.key}`, line.trim())}
+      `)
+  })
+  exit()
 })
+
+function exit() {
+  process.exit(0)
+}

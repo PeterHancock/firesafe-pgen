@@ -1,11 +1,24 @@
 {
   "name": "firesafe-pgen",
   "version": "1.0.0",
+  "author": "",
+  "license": "ISC",
   "description": "pgen from Firesafe for offline",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prettier": "prettier  --write '**/*.js'",
+    "precommit": "lint-staged"
   },
-  "author": "",
-  "license": "ISC"
+  "lint-staged": {
+    "*.js": [
+      "prettier --config .prettierrc --write",
+      "git add"
+    ]
+  },
+  "devDependencies": {
+    "husky": "0.14.3",
+    "lerna": "^2.5.1",
+    "lint-staged": "5.0.0",
+    "prettier": "1.8.2"
+  }
 }
