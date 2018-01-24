@@ -13,7 +13,7 @@ if (argsSet.has('--help') || argsSet.has('-h')) {
   exit()
 }
 
-const [filterMaybe] = args
+const [filterMaybe = ''] = args
 
 const filter = filterMaybe.startsWith('-') ? '.*' : filterMaybe
 
