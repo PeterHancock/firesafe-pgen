@@ -1,3 +1,4 @@
+const fs = require('fs')
 const readline = require('readline')
 const pgen = require('./pgen')
 const accountsRaw = require('./accounts.json')
@@ -9,7 +10,7 @@ const args = process.argv.slice(2)
 const argsSet = new Set(args)
 
 if (argsSet.has('--help') || argsSet.has('-h')) {
-  console.log('firesafe-pgen [filter:rgx] [--help|-h] [--list|-l]')
+  console.log('firesafe-pgen [filter:rgx] [--help|-h] [--list|-l] [--output|-o]')
   exit()
 }
 
@@ -34,13 +35,22 @@ Account ID ${account.id}`)
 }
 
 readSecret('secret?', line => {
-  accounts.filter(account => account.resource.match(filter)).forEach(account => {
-    console.log(`
-  Resource ${account.resource}
-  Account ID ${account.id}
-  Password ${pgen(`${account.resource}${account.key}`, line.trim())}
-      `)
-  })
+  const output = accounts
+    .filter(account => account.resource.match(filter))
+    .map(
+      account => `
+Resource ${account.resource}
+Account ID ${account.id}
+Password ${pgen(`${account.resource}${account.key}`, line.trim())}
+  `
+    )
+    .join('\n')
+
+  if (argsSet.has('--output') || argsSet.has('-o')) {
+    fs.writeFileSync('./accounts.output', output)
+  } else {
+    console.log(output)
+  }
   exit()
 })
 
